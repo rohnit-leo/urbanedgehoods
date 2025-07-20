@@ -1,17 +1,17 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Heart, Share2, ShoppingBag, Truck, Shield, RotateCcw, Star } from "lucide-react"
+import { Heart, Shield, Star, Zap, Award, Droplets } from "lucide-react"
 import { createClient } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
+import PaymentModal from "@/components/payment-modal"
+import { motion } from "framer-motion"
+import Label from "@/components/ui/label"
 
 interface ProductDetailsProps {
   product: {
@@ -27,6 +27,9 @@ interface ProductDetailsProps {
     materials: string[]
     care_instructions: string
     stock_quantity: number
+    featured?: boolean
+    trending?: boolean
+    new_arrival?: boolean
   }
 }
 
@@ -37,6 +40,12 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const [user, setUser] = useState<any>(null)
   const [isInWishlist, setIsInWishlist] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [paymentModal, setPaymentModal] = useState({
+    isOpen: false,
+    status: "loading" as "loading" | "success" | "error",
+    orderDetails: undefined as any,
+    errorMessage: "",
+  })
   const supabase = createClient()
   const router = useRouter()
 
@@ -48,7 +57,6 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       setUser(user)
 
       if (user) {
-        // Check if product is in wishlist
         const { data } = await supabase
           .from("wishlist")
           .select("id")
@@ -75,7 +83,6 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     setLoading(true)
 
     try {
-      // Check if item already exists in cart
       const { data: existingItem } = await supabase
         .from("cart")
         .select("*")
@@ -86,13 +93,11 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         .single()
 
       if (existingItem) {
-        // Update quantity
         await supabase
           .from("cart")
           .update({ quantity: existingItem.quantity + quantity })
           .eq("id", existingItem.id)
       } else {
-        // Add new item
         await supabase.from("cart").insert([
           {
             user_id: user.id,
@@ -124,6 +129,14 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       return
     }
 
+    // Show loading modal
+    setPaymentModal({
+      isOpen: true,
+      status: "loading",
+      orderDetails: undefined,
+      errorMessage: "",
+    })
+
     // Load Razorpay script
     const script = document.createElement("script")
     script.src = "https://checkout.razorpay.com/v1/checkout.js"
@@ -140,7 +153,6 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         image: "/logo-dark.png",
         handler: async (response: any) => {
           try {
-            // Save order to database
             const orderData = {
               customer_email: user.email,
               customer_name: user.user_metadata?.full_name || "Customer",
@@ -163,7 +175,6 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
             if (orderError) throw orderError
 
-            // Add order items
             await supabase.from("order_items").insert([
               {
                 order_id: order.id,
@@ -177,12 +188,36 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
               },
             ])
 
-            alert(`Payment successful! Order ID: ${order.order_number}`)
-            router.push("/account/orders")
+            // Show success modal
+            setPaymentModal({
+              isOpen: true,
+              status: "success",
+              orderDetails: {
+                orderId: order.order_number || order.id.slice(0, 8),
+                amount: product.price * quantity,
+                productName: product.title,
+              },
+              errorMessage: "",
+            })
           } catch (error) {
             console.error("Error saving order:", error)
-            alert("Payment successful but failed to save order details")
+            setPaymentModal({
+              isOpen: true,
+              status: "error",
+              orderDetails: undefined,
+              errorMessage: "Payment successful but failed to save order details",
+            })
           }
+        },
+        modal: {
+          ondismiss: () => {
+            setPaymentModal({
+              isOpen: true,
+              status: "error",
+              orderDetails: undefined,
+              errorMessage: "Payment was cancelled",
+            })
+          },
         },
         prefill: {
           name: user.user_metadata?.full_name || "",
@@ -196,6 +231,15 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
       const rzp = new (window as any).Razorpay(options)
       rzp.open()
+    }
+
+    script.onerror = () => {
+      setPaymentModal({
+        isOpen: true,
+        status: "error",
+        orderDetails: undefined,
+        errorMessage: "Failed to load payment gateway",
+      })
     }
   }
 
@@ -223,331 +267,217 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     : 0
 
   return (
-    <div className="min-h-screen bg-black text-white py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Product Images */}
-          <div className="space-y-4">
-            <div className="aspect-square relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800">
-              <Image
-                src={`/placeholder.svg?height=800&width=800&query=${product.title} ${product.category} streetwear clothing`}
-                alt={product.title}
-                fill
-                className="object-cover hover:scale-105 transition-transform duration-500"
-                priority
-              />
-              {discountPercentage > 0 && (
-                <Badge className="absolute top-4 left-4 bg-red-500 text-white">-{discountPercentage}%</Badge>
-              )}
-            </div>
+    <>
+      <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-black text-white py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Product Images */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="space-y-6"
+            >
+              <div className="aspect-square relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-700 shadow-2xl">
+                <Image
+                  src={`/products/bomber-jacket-${
+                    product.slug.includes("cyber-luxe")
+                      ? "1"
+                      : product.slug.includes("artistic-fusion")
+                        ? "2"
+                        : product.slug.includes("digital-wave")
+                          ? "3"
+                          : product.slug.includes("velocity-orange")
+                            ? "4"
+                            : product.slug.includes("signature-white")
+                              ? "5"
+                              : product.slug.includes("arctic-blue")
+                                ? "6"
+                                : product.slug.includes("spectrum-burst")
+                                  ? "7"
+                                  : "8"
+                  }.webp`}
+                  alt={product.title}
+                  fill
+                  className="object-cover hover:scale-105 transition-transform duration-700"
+                  priority
+                />
 
-            {/* Thumbnail Images */}
-            <div className="grid grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="aspect-square relative overflow-hidden rounded-lg bg-zinc-800 border border-zinc-700"
-                >
-                  <Image
-                    src={`/placeholder.svg?height=200&width=200&query=${product.title} angle ${i}`}
-                    alt={`${product.title} view ${i}`}
-                    fill
-                    className="object-cover hover:scale-105 transition-transform cursor-pointer"
-                  />
+                {/* Badges */}
+                <div className="absolute top-6 left-6 flex flex-col gap-3">
+                  {product.new_arrival && (
+                    <Badge className="bg-green-500 text-white font-bold px-3 py-1">NEW ARRIVAL</Badge>
+                  )}
+                  {product.trending && (
+                    <Badge className="bg-red-500 text-white font-bold flex items-center gap-1 px-3 py-1">
+                      <Zap className="h-3 w-3" />
+                      TRENDING
+                    </Badge>
+                  )}
+                  {discountPercentage > 0 && (
+                    <Badge className="bg-amber-500 text-black font-bold px-3 py-1">-{discountPercentage}% OFF</Badge>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Product Info */}
-          <div className="space-y-8">
-            <div>
-              <Badge variant="secondary" className="mb-4 bg-amber-500/20 text-amber-400 border-amber-500/30">
-                {product.category.toUpperCase()}
-              </Badge>
-              <h1 className="text-4xl font-bold mb-4 leading-tight">{product.title}</h1>
-
-              <div className="flex items-center gap-4 mb-6">
-                <span className="text-4xl font-bold text-amber-500">₹{product.price}</span>
-                {product.compare_price && (
-                  <span className="text-2xl text-zinc-500 line-through">₹{product.compare_price}</span>
-                )}
-                {discountPercentage > 0 && <Badge className="bg-red-500 text-white">Save {discountPercentage}%</Badge>}
               </div>
 
-              <div className="flex items-center gap-2 mb-6">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-amber-500 text-amber-500" />
-                  ))}
-                </div>
-                <span className="text-zinc-400">(4.8) • 124 reviews</span>
+              {/* Premium Features */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border-blue-500/20">
+                  <CardContent className="p-4 text-center">
+                    <Droplets className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-blue-400">Waterproof</p>
+                    <p className="text-xs text-zinc-400">Outer Shell</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border-purple-500/20">
+                  <CardContent className="p-4 text-center">
+                    <Award className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-purple-400">Triple Layer</p>
+                    <p className="text-xs text-zinc-400">Premium Build</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/10 border-amber-500/20">
+                  <CardContent className="p-4 text-center">
+                    <Shield className="h-8 w-8 text-amber-400 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-amber-400">In-House</p>
+                    <p className="text-xs text-zinc-400">Manufactured</p>
+                  </CardContent>
+                </Card>
               </div>
+            </motion.div>
 
-              <p className="text-zinc-300 text-lg leading-relaxed mb-8">{product.short_description}</p>
-            </div>
-
-            {/* Size Selection */}
-            <div className="space-y-4">
-              <Label className="text-lg font-semibold">Size</Label>
-              <div className="grid grid-cols-5 gap-3">
-                {product.sizes?.map((size) => (
-                  <Button
-                    key={size}
-                    variant={selectedSize === size ? "default" : "outline"}
-                    onClick={() => setSelectedSize(size)}
-                    className={`h-12 ${
-                      selectedSize === size
-                        ? "bg-amber-500 text-black border-amber-500"
-                        : "border-zinc-700 text-white hover:border-amber-500 hover:text-amber-500"
-                    }`}
-                  >
-                    {size}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Color Selection */}
-            <div className="space-y-4">
-              <Label className="text-lg font-semibold">Color</Label>
-              <div className="flex gap-3">
-                {product.colors?.map((color) => (
-                  <Button
-                    key={color}
-                    variant={selectedColor === color ? "default" : "outline"}
-                    onClick={() => setSelectedColor(color)}
-                    className={`px-6 py-3 ${
-                      selectedColor === color
-                        ? "bg-amber-500 text-black border-amber-500"
-                        : "border-zinc-700 text-white hover:border-amber-500 hover:text-amber-500"
-                    }`}
-                  >
-                    {color}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quantity */}
-            <div className="space-y-4">
-              <Label className="text-lg font-semibold">Quantity</Label>
-              <Select onValueChange={(value) => setQuantity(Number.parseInt(value))}>
-                <SelectTrigger className="w-32 bg-zinc-900 border-zinc-700">
-                  <SelectValue placeholder="1" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5].map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
-                      {num}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <Button
-                  onClick={handleBuyNow}
-                  className="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-semibold py-4 text-lg rounded-xl transition-all duration-300 transform hover:scale-105"
-                  size="lg"
-                >
-                  <ShoppingBag className="mr-2 h-5 w-5" />
-                  BUY NOW
-                </Button>
-                <Button
-                  onClick={handleAddToCart}
-                  disabled={loading}
-                  variant="outline"
-                  className="flex-1 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black font-semibold py-4 text-lg rounded-xl transition-all duration-300 bg-transparent"
-                  size="lg"
-                >
-                  {loading ? "ADDING..." : "ADD TO CART"}
-                </Button>
-              </div>
-
-              <div className="flex gap-4">
-                <Button
-                  onClick={handleWishlist}
-                  variant="outline"
-                  className={`flex-1 border-zinc-700 hover:bg-zinc-800 font-semibold py-3 rounded-xl transition-all duration-300 ${
-                    isInWishlist ? "bg-red-500/20 border-red-500 text-red-400" : "text-white"
-                  }`}
-                >
-                  <Heart className={`mr-2 h-4 w-4 ${isInWishlist ? "fill-current" : ""}`} />
-                  {isInWishlist ? "IN WISHLIST" : "ADD TO WISHLIST"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1 border-zinc-700 text-white hover:bg-zinc-800 font-semibold py-3 rounded-xl transition-all duration-300 bg-transparent"
-                >
-                  <Share2 className="mr-2 h-4 w-4" />
-                  SHARE
-                </Button>
-              </div>
-            </div>
-
-            {/* Product Features */}
-            <div className="grid grid-cols-3 gap-4">
-              <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardContent className="p-4 text-center">
-                  <Truck className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="text-sm text-zinc-300">Free Shipping</p>
-                  <p className="text-xs text-zinc-500">Above ₹2999</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardContent className="p-4 text-center">
-                  <RotateCcw className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="text-sm text-zinc-300">Easy Returns</p>
-                  <p className="text-xs text-zinc-500">7 Day Return</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardContent className="p-4 text-center">
-                  <Shield className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="text-sm text-zinc-300">Authentic</p>
-                  <p className="text-xs text-zinc-500">100% Original</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Stock Status */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-300">Stock Status:</span>
+            {/* Product Info */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="space-y-8"
+            >
+              <div>
                 <Badge
-                  className={
-                    product.stock_quantity > 10 ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
-                  }
+                  variant="secondary"
+                  className="mb-4 bg-amber-500/20 text-amber-400 border-amber-500/30 px-4 py-2"
                 >
-                  {product.stock_quantity > 10 ? "In Stock" : `Only ${product.stock_quantity} left`}
+                  {product.category.toUpperCase().replace("-", " ")}
                 </Badge>
+                <h1 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight bg-gradient-to-r from-white to-zinc-300 bg-clip-text text-transparent">
+                  {product.title}
+                </h1>
+
+                <div className="flex items-center gap-6 mb-6">
+                  <span className="text-5xl font-bold text-amber-500">₹{product.price}</span>
+                  {product.compare_price && (
+                    <div className="flex flex-col">
+                      <span className="text-2xl text-zinc-500 line-through">₹{product.compare_price}</span>
+                      <span className="text-sm text-green-400 font-semibold">
+                        Save ₹{product.compare_price - product.price}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 fill-amber-500 text-amber-500" />
+                    ))}
+                  </div>
+                  <span className="text-zinc-400">(4.9) • 247 reviews</span>
+                </div>
+
+                <p className="text-zinc-300 text-lg leading-relaxed mb-8">{product.short_description}</p>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Product Details Tabs */}
-        <div className="mt-16">
-          <Tabs defaultValue="description" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-zinc-900 border border-zinc-800">
-              <TabsTrigger
-                value="description"
-                className="data-[state=active]:bg-amber-500 data-[state=active]:text-black"
-              >
-                Description
-              </TabsTrigger>
-              <TabsTrigger
-                value="materials"
-                className="data-[state=active]:bg-amber-500 data-[state=active]:text-black"
-              >
-                Materials
-              </TabsTrigger>
-              <TabsTrigger value="care" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
-                Care Guide
-              </TabsTrigger>
-              <TabsTrigger value="reviews" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
-                Reviews
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="description" className="mt-8">
-              <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardContent className="p-8">
-                  <div className="prose prose-invert max-w-none">
-                    <p className="text-zinc-300 leading-relaxed text-lg">{product.description}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="materials" className="mt-8">
-              <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardContent className="p-8">
-                  <h3 className="text-xl font-semibold text-white mb-4">Materials & Construction</h3>
-                  <ul className="space-y-3">
-                    {product.materials?.map((material, index) => (
-                      <li key={index} className="flex items-center text-zinc-300">
-                        <span className="w-2 h-2 bg-amber-500 rounded-full mr-3" />
-                        {material}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="care" className="mt-8">
-              <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardContent className="p-8">
-                  <h3 className="text-xl font-semibold text-white mb-4">Care Instructions</h3>
-                  <p className="text-zinc-300 leading-relaxed">{product.care_instructions}</p>
-                  <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-zinc-800/50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-white mb-2">Washing</h4>
-                      <p className="text-zinc-400 text-sm">Machine wash cold with similar colors</p>
-                    </div>
-                    <div className="bg-zinc-800/50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-white mb-2">Drying</h4>
-                      <p className="text-zinc-400 text-sm">Tumble dry low or hang dry</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="reviews" className="mt-8">
-              <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardContent className="p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-white">Customer Reviews</h3>
+              {/* Size Selection */}
+              <div className="space-y-4">
+                <Label className="text-lg font-semibold">Size</Label>
+                <div className="grid grid-cols-5 gap-3">
+                  {product.sizes?.map((size) => (
                     <Button
-                      variant="outline"
-                      className="border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black bg-transparent"
+                      key={size}
+                      variant={selectedSize === size ? "default" : "outline"}
+                      onClick={() => setSelectedSize(size)}
+                      className={`h-14 text-lg font-semibold transition-all duration-300 ${
+                        selectedSize === size
+                          ? "bg-amber-500 text-black border-amber-500 shadow-lg shadow-amber-500/25"
+                          : "border-zinc-600 text-white hover:border-amber-500 hover:text-amber-500 hover:shadow-lg hover:shadow-amber-500/10"
+                      }`}
                     >
-                      Write Review
+                      {size}
                     </Button>
-                  </div>
+                  ))}
+                </div>
+              </div>
 
-                  <div className="space-y-6">
-                    {[1, 2, 3].map((review) => (
-                      <div key={review} className="border-b border-zinc-800 pb-6">
-                        <div className="flex items-center gap-4 mb-3">
-                          <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-black font-bold">
-                            U
-                          </div>
-                          <div>
-                            <p className="font-semibold text-white">Urban Fashionista</p>
-                            <div className="flex items-center gap-2">
-                              <div className="flex">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className="h-4 w-4 fill-amber-500 text-amber-500" />
-                                ))}
-                              </div>
-                              <span className="text-zinc-500 text-sm">2 days ago</span>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-zinc-300">
-                          Amazing quality and fit! The material feels premium and the design is exactly what I was
-                          looking for. Definitely recommend this to anyone looking for authentic streetwear.
-                        </p>
-                      </div>
+              {/* Color Selection */}
+              <div className="space-y-4">
+                <Label className="text-lg font-semibold">Color</Label>
+                <div className="grid grid-cols-5 gap-3">
+                  {product.colors?.map((color) => (
+                    <Button
+                      key={color}
+                      variant={selectedColor === color ? "default" : "outline"}
+                      onClick={() => setSelectedColor(color)}
+                      className={`h-14 text-lg font-semibold transition-all duration-300 ${
+                        selectedColor === color
+                          ? "bg-amber-500 text-black border-amber-500 shadow-lg shadow-amber-500/25"
+                          : "border-zinc-600 text-white hover:border-amber-500 hover:text-amber-500 hover:shadow-lg hover:shadow-amber-500/10"
+                      }`}
+                    >
+                      {color}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quantity Selection */}
+              <div className="space-y-4">
+                <Label className="text-lg font-semibold">Quantity</Label>
+                <Select value={quantity.toString()} onValueChange={(value) => setQuantity(Number.parseInt(value))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select quantity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[...Array(product.stock_quantity)].map((_, i) => (
+                      <SelectItem key={i + 1} value={(i + 1).toString()}>
+                        {i + 1}
+                      </SelectItem>
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <Button onClick={handleAddToCart} className="bg-amber-500 text-black hover:bg-amber-600">
+                  Add to Cart
+                </Button>
+                <Button onClick={handleBuyNow} className="bg-green-500 text-black hover:bg-green-600">
+                  Buy Now
+                </Button>
+              </div>
+
+              {/* Wishlist Button */}
+              <div className="flex items-center gap-2">
+                <Button onClick={handleWishlist} className="bg-zinc-800 text-white hover:bg-zinc-900">
+                  {isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                </Button>
+                <Heart className="h-6 w-6 text-white" />
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
-    </div>
+      {paymentModal.isOpen && (
+        <PaymentModal
+          status={paymentModal.status}
+          orderDetails={paymentModal.orderDetails}
+          errorMessage={paymentModal.errorMessage}
+          onClose={() =>
+            setPaymentModal({ isOpen: false, status: "loading", orderDetails: undefined, errorMessage: "" })
+          }
+        />
+      )}
+    </>
   )
-}
-
-function Label({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <label className={`block text-sm font-medium ${className}`}>{children}</label>
 }
