@@ -1,41 +1,96 @@
 "use client"
 
-import { createClient } from "@/lib/supabase"
-import ProductCard from "@/components/product-card"
-import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase"
+import ProductCard from "./product-card"
 
-export default async function FeaturedProducts() {
-  const supabase = createClient()
+interface Product {
+  id: string
+  name: string
+  price: number
+  image_url: string
+  slug: string
+  category: string
+  description?: string
+}
 
-  const { data: products } = await supabase
-    .from("products")
-    .select(`
-      *,
-      product_images!inner(image_url, is_primary)
-    `)
-    .eq("featured", true)
-    .eq("status", "active")
-    .eq("product_images.is_primary", true)
-    .limit(8)
+export default function FeaturedProducts() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Transform data to include image_url from product_images
-  const productsWithImages =
-    products?.map((product) => ({
-      ...product,
-      image_url: product.product_images?.[0]?.image_url || null,
-    })) || []
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .limit(8)
+          .order("created_at", { ascending: false })
 
-  if (!productsWithImages || productsWithImages.length === 0) {
+        if (error) throw error
+        setProducts(data || [])
+      } catch (err) {
+        console.error("Error fetching products:", err)
+        setError("Failed to load products")
+        // Fallback products for demo
+        setProducts([
+          {
+            id: "1",
+            name: "Urban Bomber Jacket",
+            price: 4999,
+            image_url: "/products/bomber-jacket-1.webp",
+            slug: "urban-bomber-jacket",
+            category: "Jackets",
+          },
+          {
+            id: "2",
+            name: "Street Style Hoodie",
+            price: 2999,
+            image_url: "/products/hoodie-1.webp",
+            slug: "street-style-hoodie",
+            category: "Hoodies",
+          },
+          {
+            id: "3",
+            name: "Classic Cuban Shirt",
+            price: 1999,
+            image_url: "/products/shirt-1.webp",
+            slug: "classic-cuban-shirt",
+            category: "Shirts",
+          },
+          {
+            id: "4",
+            name: "Premium Bomber",
+            price: 5999,
+            image_url: "/products/bomber-jacket-2.webp",
+            slug: "premium-bomber",
+            category: "Jackets",
+          },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [])
+
+  if (loading) {
     return (
-      <section className="py-20 bg-gradient-to-b from-zinc-900 to-black">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-white mb-6">FEATURED DROPS</h2>
-            <p className="text-zinc-400 text-xl">Handpicked pieces that define the streets</p>
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Products</h2>
+            <p className="text-gray-600">Discover our most popular streetwear pieces</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-zinc-800 rounded-2xl h-96 animate-pulse" />
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
             ))}
           </div>
         </div>
@@ -44,47 +99,30 @@ export default async function FeaturedProducts() {
   }
 
   return (
-    <section className="py-20 bg-gradient-to-b from-zinc-900 to-black relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute top-20 left-10 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-40 h-40 bg-red-500/5 rounded-full blur-3xl" />
-
-      <div className="max-w-7xl mx-auto px-4 relative z-10">
-        <div className="text-center mb-16">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
-              FEATURED <span className="text-amber-500">DROPS</span>
-            </h2>
-            <p className="text-zinc-400 text-xl max-w-2xl mx-auto leading-relaxed">
-              Handpicked pieces that define the streets. Premium triple-layered bomber jackets with exclusive vector art
-              designs.
-            </p>
-          </motion.div>
+    <section className="py-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Products</h2>
+          <p className="text-gray-600">Discover our most popular streetwear pieces</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {productsWithImages.map((product, index) => (
-            <ProductCard key={product.id} product={product} index={index} />
+        {error && (
+          <div className="text-center text-red-600 mb-8">
+            <p>{error}</p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
 
-        {/* View All Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="text-center mt-16"
-        >
-          <a
-            href="/collections/ue-hoods-bomber-jackets"
-            className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-amber-500/25"
-          >
-            VIEW ALL BOMBER JACKETS
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </a>
-        </motion.div>
+        {products.length === 0 && !loading && (
+          <div className="text-center text-gray-500">
+            <p>No products available at the moment.</p>
+          </div>
+        )}
       </div>
     </section>
   )
