@@ -2,170 +2,121 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Instagram, Facebook, Mail, Phone, MapPin, ArrowRight } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
+import { Instagram, Facebook, Twitter, Youtube, Mail, Phone, MapPin, ArrowRight, Heart } from "lucide-react"
 
 const footerLinks = {
   shop: [
-    { name: "All Products", href: "/collections" },
-    { name: "Bomber Jackets", href: "/collections/ue-hoods-bomber-jackets" },
-    { name: "Cuban Shirts", href: "/collections/shirts" },
-    { name: "Hoodies & Sweatshirts", href: "/collections/sweatshirts-hoodies" },
-    { name: "New Arrivals", href: "/collections?filter=new" },
-    { name: "Sale Items", href: "/collections?filter=sale" },
+    { name: "UE Hoods Bomber Jackets", href: "/collections/ue-hoods-bomber-jackets" },
+    { name: "Cuban Collar Shirts", href: "/collections/shirts" },
+    { name: "Sweatshirts & Hoodies", href: "/collections/sweatshirts-hoodies" },
+    { name: "All Collections", href: "/collections" },
   ],
   company: [
     { name: "About Us", href: "/about" },
-    { name: "Brand Works", href: "/brand-works" },
+    { name: "Brand Works & Partnerships", href: "/brand-works" },
     { name: "Custom Sportswear", href: "/sportswear" },
     { name: "Contact", href: "/contact" },
-    { name: "Careers", href: "/careers" },
-    { name: "Press", href: "/press" },
   ],
   support: [
     { name: "Size Guide", href: "/size-guide" },
     { name: "Shipping Info", href: "/shipping" },
     { name: "Returns & Exchanges", href: "/returns" },
-    { name: "FAQ", href: "/faq" },
-    { name: "Customer Service", href: "/support" },
-    { name: "Track Your Order", href: "/track" },
+    { name: "Care Instructions", href: "/care" },
   ],
   legal: [
     { name: "Privacy Policy", href: "/privacy" },
     { name: "Terms of Service", href: "/terms" },
+    { name: "Refund Policy", href: "/refund" },
     { name: "Cookie Policy", href: "/cookies" },
-    { name: "Accessibility", href: "/accessibility" },
   ],
 }
 
 const socialLinks = [
-  {
-    name: "Instagram",
-    icon: Instagram,
-    href: "https://instagram.com/urbanedgehoods",
-    gradient: "from-pink-500 to-purple-600",
-  },
-  {
-    name: "Facebook",
-    icon: Facebook,
-    href: "https://facebook.com/urbanedgehoods",
-    gradient: "from-blue-600 to-blue-800",
-  },
+  { name: "Instagram", icon: Instagram, href: "https://instagram.com/urbanedgehoods", color: "hover:text-pink-500" },
+  { name: "Facebook", icon: Facebook, href: "https://facebook.com/urbanedgehoods", color: "hover:text-blue-500" },
+  { name: "Twitter", icon: Twitter, href: "https://twitter.com/urbanedgehoods", color: "hover:text-blue-400" },
+  { name: "YouTube", icon: Youtube, href: "https://youtube.com/urbanedgehoods", color: "hover:text-red-500" },
 ]
 
 export default function Footer() {
   return (
-    <footer className="bg-gradient-to-b from-gray-50 to-white relative overflow-hidden border-t border-gray-200">
-      {/* Third Announcement Bar */}
-      <div className="bg-gradient-to-r from-amber-100 via-yellow-50 to-amber-100 border-b border-amber-200 py-3 overflow-hidden">
-        <div className="animate-scroll whitespace-nowrap">
-          <span className="inline-block px-8 text-gray-800 font-medium">
-            🏆 AWARD-WINNING STREETWEAR BRAND 🏆
-          </span>
-          <span className="inline-block px-8 text-gray-800 font-medium">
-            🌍 SHIPPING WORLDWIDE - MADE IN INDIA 🌍
-          </span>
-          <span className="inline-block px-8 text-gray-800 font-medium">
-            💯 100% AUTHENTIC PRODUCTS GUARANTEED 💯
-          </span>
-          <span className="inline-block px-8 text-gray-800 font-medium">
-            📞 24/7 CUSTOMER SUPPORT AVAILABLE 📞
-          </span>
+    <footer className="bg-gray-900 text-white">
+      {/* Newsletter Announcement Bar */}
+      <div className="bg-gradient-to-r from-amber-600 to-amber-700 border-b border-amber-500">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-center text-center">
+            <p className="text-sm font-medium text-white">
+              💌 <span className="font-bold">SUBSCRIBE</span> to our newsletter and get 10% OFF your first order +
+              exclusive drops
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        {/* Newsletter Section */}
-        <div className="py-16 border-b border-gray-200">
-          <div className="max-w-4xl mx-auto text-center">
-            <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-amber-600 bg-clip-text text-transparent mb-4">
-              Stay in the Loop
-            </h3>
-            <p className="text-xl text-gray-600 mb-8">
-              Get exclusive access to new drops, sales, and style inspiration
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+          {/* Brand Section */}
+          <div className="lg:col-span-1 space-y-6">
+            <Link href="/" className="flex items-center space-x-3">
+              <Image src="/logo-dark.png" alt="UrbanEdge Hoods" width={50} height={50} className="object-contain" />
+              <div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-white via-amber-400 to-white bg-clip-text text-transparent">
+                  URBANEDGE
+                </h3>
+                <p className="text-xs text-gray-400 font-medium tracking-wider">PREMIUM STREETWEAR</p>
+              </div>
+            </Link>
+
+            <p className="text-gray-300 leading-relaxed">
+              Redefining streetwear with premium quality, authentic designs, and unmatched style. Join our community of
+              urban fashion enthusiasts.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 bg-white border-gray-300 text-gray-800 placeholder-gray-500 focus:border-amber-500"
-              />
-              <Button className="bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white font-bold px-8">
-                Subscribe
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+
+            {/* Newsletter Signup */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-white">Stay Updated</h4>
+              <div className="flex space-x-2">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 flex-1"
+                />
+                <Button className="bg-amber-500 hover:bg-amber-600 text-black px-4">
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-gray-400">Get 10% off your first order when you subscribe</p>
             </div>
-            <p className="text-sm text-gray-500 mt-4">Join 50,000+ subscribers. Unsubscribe anytime.</p>
+
+            {/* Social Links */}
+            <div className="flex space-x-4">
+              {socialLinks.map((social) => (
+                <Link
+                  key={social.name}
+                  href={social.href}
+                  target="_blank"
+                  className={`w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center transition-all duration-300 ${social.color} hover:bg-gray-700`}
+                >
+                  <social.icon className="h-5 w-5" />
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Main Footer Content */}
-        <div className="py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
-            {/* Brand Section */}
-            <div className="lg:col-span-2">
-              <Link href="/" className="flex items-center space-x-3 mb-6">
-                <div className="relative w-12 h-12">
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full blur-lg opacity-30" />
-                  <Image
-                    src="/logo-light.png"
-                    alt="UrbanEdge Hoods"
-                    fill
-                    className="object-contain relative z-10"
-                  />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-amber-600 bg-clip-text text-transparent">
-                    UrbanEdge
-                  </h1>
-                  <p className="text-xs text-amber-600 font-semibold -mt-1">HOODS</p>
-                </div>
-              </Link>
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                Redefining urban streetwear with premium quality, unique designs, and authentic style. Join the movement
-                and express your individuality.
-              </p>
-
-              {/* Contact Info */}
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center space-x-3 text-gray-600">
-                  <Mail className="w-5 h-5 text-amber-600" />
-                  <span>support@urbanedgehoods.com</span>
-                </div>
-                <div className="flex items-center space-x-3 text-gray-600">
-                  <Phone className="w-5 h-5 text-amber-600" />
-                  <span>+91 7798984147</span>
-                </div>
-                <div className="flex items-center space-x-3 text-gray-600">
-                  <MapPin className="w-5 h-5 text-amber-600" />
-                  <span>Made in India 🇮🇳</span>
-                </div>
-              </div>
-
-              {/* Social Links */}
-              <div className="flex space-x-4">
-                {socialLinks.map((social) => (
-                  <Link
-                    key={social.name}
-                    href={social.href}
-                    className={`w-10 h-10 rounded-full bg-gradient-to-r ${social.gradient} flex items-center justify-center text-white hover:scale-110 transition-transform duration-300`}
-                  >
-                    <social.icon className="w-5 h-5" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-
+          {/* Links Sections */}
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Shop Links */}
             <div>
-              <h4 className="text-gray-900 font-bold text-lg mb-6">Shop</h4>
+              <h4 className="font-bold text-white mb-6 text-lg">Shop</h4>
               <ul className="space-y-3">
                 {footerLinks.shop.map((link) => (
                   <li key={link.name}>
                     <Link
                       href={link.href}
-                      className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
+                      className="text-gray-300 hover:text-amber-400 transition-colors duration-300"
                     >
                       {link.name}
                     </Link>
@@ -176,13 +127,13 @@ export default function Footer() {
 
             {/* Company Links */}
             <div>
-              <h4 className="text-gray-900 font-bold text-lg mb-6">Company</h4>
+              <h4 className="font-bold text-white mb-6 text-lg">Company</h4>
               <ul className="space-y-3">
                 {footerLinks.company.map((link) => (
                   <li key={link.name}>
                     <Link
                       href={link.href}
-                      className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
+                      className="text-gray-300 hover:text-amber-400 transition-colors duration-300"
                     >
                       {link.name}
                     </Link>
@@ -193,30 +144,13 @@ export default function Footer() {
 
             {/* Support Links */}
             <div>
-              <h4 className="text-gray-900 font-bold text-lg mb-6">Support</h4>
+              <h4 className="font-bold text-white mb-6 text-lg">Support</h4>
               <ul className="space-y-3">
                 {footerLinks.support.map((link) => (
                   <li key={link.name}>
                     <Link
                       href={link.href}
-                      className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Legal Links */}
-            <div>
-              <h4 className="text-gray-900 font-bold text-lg mb-6">Legal</h4>
-              <ul className="space-y-3">
-                {footerLinks.legal.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
+                      className="text-gray-300 hover:text-amber-400 transition-colors duration-300"
                     >
                       {link.name}
                     </Link>
@@ -227,29 +161,63 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="py-8 border-t border-gray-200">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-gray-600 text-sm">© 2024 UrbanEdge Hoods. All rights reserved.</div>
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                <span>We accept:</span>
-                <div className="flex space-x-2">
-                  <div className="w-8 h-5 bg-gradient-to-r from-blue-600 to-blue-800 rounded text-white text-xs flex items-center justify-center font-bold">
-                    VISA
-                  </div>
-                  <div className="w-8 h-5 bg-gradient-to-r from-red-600 to-red-800 rounded text-white text-xs flex items-center justify-center font-bold">
-                    MC
-                  </div>
-                  <div className="w-8 h-5 bg-gradient-to-r from-blue-500 to-blue-700 rounded text-white text-xs flex items-center justify-center font-bold">
-                    AMEX
-                  </div>
-                  <div className="w-8 h-5 bg-gradient-to-r from-purple-600 to-purple-800 rounded text-white text-xs flex items-center justify-center font-bold">
-                    PP
-                  </div>
-                </div>
+        {/* Contact Info */}
+        <div className="mt-16 pt-8 border-t border-gray-800">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                <Mail className="h-5 w-5 text-black" />
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Email Us</p>
+                <p className="text-white font-medium">hello@urbanedgehoods.com</p>
               </div>
             </div>
+
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                <Phone className="h-5 w-5 text-black" />
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Call Us</p>
+                <p className="text-white font-medium">+91 98765 43210</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                <MapPin className="h-5 w-5 text-black" />
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Visit Us</p>
+                <p className="text-white font-medium">Mumbai, India</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Separator className="my-8 bg-gray-800" />
+
+        {/* Bottom Section */}
+        <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+          <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
+            <p className="text-gray-400 text-sm">© 2024 UrbanEdge Hoods. All rights reserved.</p>
+            <div className="flex items-center space-x-4 text-sm">
+              {footerLinks.legal.map((link, index) => (
+                <span key={link.name} className="flex items-center">
+                  <Link href={link.href} className="text-gray-400 hover:text-amber-400 transition-colors duration-300">
+                    {link.name}
+                  </Link>
+                  {index < footerLinks.legal.length - 1 && <span className="text-gray-600 ml-4">|</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 text-gray-400 text-sm">
+            <span>Made with</span>
+            <Heart className="h-4 w-4 text-red-500 fill-current" />
+            <span>in India</span>
           </div>
         </div>
       </div>

@@ -1,88 +1,117 @@
 "use client"
 
+import { TrendingUp, Users, Award, ShoppingBag } from "lucide-react"
+import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 
 const stats = [
-  { number: 10000, suffix: "+", label: "Happy Customers", description: "Worldwide" },
-  { number: 50, suffix: "+", label: "Unique Designs", description: "And Growing" },
-  { number: 99, suffix: "%", label: "Satisfaction Rate", description: "Customer Reviews" },
-  { number: 24, suffix: "/7", label: "Support", description: "Always Available" },
+  {
+    icon: Users,
+    number: 50000,
+    suffix: "+",
+    label: "Happy Customers",
+    description: "Trusted by streetwear enthusiasts worldwide",
+  },
+  {
+    icon: ShoppingBag,
+    number: 1000,
+    suffix: "+",
+    label: "Premium Products",
+    description: "Curated collection of urban essentials",
+  },
+  {
+    icon: Award,
+    number: 99,
+    suffix: "%",
+    label: "Satisfaction Rate",
+    description: "Customer satisfaction is our priority",
+  },
+  {
+    icon: TrendingUp,
+    number: 5,
+    suffix: " Years",
+    label: "Industry Experience",
+    description: "Leading streetwear innovation since 2019",
+  },
 ]
 
-export default function StatsSection() {
-  const [counters, setCounters] = useState(stats.map(() => 0))
-  const [hasAnimated, setHasAnimated] = useState(false)
+function AnimatedNumber({ number, suffix }: { number: number; suffix: string }) {
+  const [count, setCount] = useState(0)
 
   useEffect(() => {
-    if (hasAnimated) return
+    const duration = 2000
+    const steps = 60
+    const increment = number / steps
+    const stepDuration = duration / steps
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setHasAnimated(true)
-          stats.forEach((stat, index) => {
-            let start = 0
-            const end = stat.number
-            const duration = 2000
-            const increment = end / (duration / 16)
+    let current = 0
+    const timer = setInterval(() => {
+      current += increment
+      if (current >= number) {
+        setCount(number)
+        clearInterval(timer)
+      } else {
+        setCount(Math.floor(current))
+      }
+    }, stepDuration)
 
-            const timer = setInterval(() => {
-              start += increment
-              if (start >= end) {
-                setCounters((prev) => {
-                  const newCounters = [...prev]
-                  newCounters[index] = end
-                  return newCounters
-                })
-                clearInterval(timer)
-              } else {
-                setCounters((prev) => {
-                  const newCounters = [...prev]
-                  newCounters[index] = Math.floor(start)
-                  return newCounters
-                })
-              }
-            }, 16)
-          })
-        }
-      },
-      { threshold: 0.5 }
-    )
-
-    const element = document.getElementById("stats-section")
-    if (element) observer.observe(element)
-
-    return () => observer.disconnect()
-  }, [hasAnimated])
+    return () => clearInterval(timer)
+  }, [number])
 
   return (
-    <section id="stats-section" className="py-20 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20"></div>
-      </div>
+    <span className="text-4xl lg:text-5xl font-bold text-gray-900">
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  )
+}
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Trusted by Thousands
+export default function StatsSection() {
+  return (
+    <section className="py-20 bg-gradient-to-b from-amber-50 to-white">
+      <div className="max-w-7xl mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+            Trusted by{" "}
+            <span className="bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">
+              Thousands
+            </span>
           </h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Join our growing community of fashion enthusiasts who trust UrbanEdge Hoods for premium streetwear.
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Join our growing community of streetwear enthusiasts who trust UrbanEdge Hoods for premium quality and
+            authentic urban style.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((stat, index) => (
-            <div key={index} className="text-center group">
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 hover:bg-white/20 transition-all duration-300 group-hover:transform group-hover:-translate-y-2">
-                <div className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent mb-2">
-                  {counters[index].toLocaleString()}{stat.suffix}
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              viewport={{ once: true }}
+              className="text-center group"
+            >
+              <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:border-amber-300 hover:shadow-xl transition-all duration-300">
+                <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <stat.icon className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">{stat.label}</h3>
-                <p className="text-gray-300 text-sm">{stat.description}</p>
+
+                <div className="mb-4">
+                  <AnimatedNumber number={stat.number} suffix={stat.suffix} />
+                </div>
+
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{stat.label}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{stat.description}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
