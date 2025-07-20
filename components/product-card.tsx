@@ -1,12 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { Heart, ShoppingBag, Eye, Star } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Heart, ShoppingBag, Eye, Zap } from "lucide-react"
-import { motion } from "framer-motion"
-import { useState } from "react"
 
 interface Product {
   id: string
@@ -27,7 +26,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const [isHovered, setIsHovered] = useState(false)
+  const [isWishlisted, setIsWishlisted] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
 
   const discountPercentage = product.compare_price
@@ -35,83 +34,75 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     : 0
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group relative bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-2xl overflow-hidden border border-zinc-700 hover:border-amber-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/10"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="group relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-amber-300 transition-all duration-500 hover:shadow-xl hover:shadow-amber-100/50 transform hover:-translate-y-2">
       {/* Image Container */}
-      <div className="aspect-square relative overflow-hidden bg-zinc-800">
+      <div className="aspect-square relative overflow-hidden bg-gray-50">
         <Image
-          src={product.image_url || `/placeholder.svg?height=400&width=400&query=${product.title} bomber jacket`}
+          src={product.image_url || `/placeholder.svg?height=400&width=400&query=${product.title} fashion`}
           alt={product.title}
           fill
-          className={`object-cover transition-all duration-700 ${
-            isHovered ? "scale-110" : "scale-100"
-          } ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+          className={`object-cover transition-all duration-700 group-hover:scale-110 ${
+            imageLoaded ? "opacity-100" : "opacity-0"
+          }`}
           onLoad={() => setImageLoaded(true)}
         />
 
         {/* Loading Skeleton */}
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
         )}
 
-        {/* Overlay */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${
-            isHovered ? "opacity-100" : "opacity-0"
-          }`}
-        />
-
         {/* Badges */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2">
-          {product.new_arrival && <Badge className="bg-green-500 text-white font-bold">NEW</Badge>}
+        <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+          {product.new_arrival && (
+            <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold">
+              NEW
+            </Badge>
+          )}
           {product.trending && (
-            <Badge className="bg-red-500 text-white font-bold flex items-center gap-1">
-              <Zap className="h-3 w-3" />
+            <Badge className="bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold">
               TRENDING
             </Badge>
           )}
           {discountPercentage > 0 && (
-            <Badge className="bg-amber-500 text-black font-bold">-{discountPercentage}%</Badge>
+            <Badge className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold">
+              -{discountPercentage}%
+            </Badge>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div
-          className={`absolute top-4 right-4 flex flex-col gap-2 transition-all duration-300 ${
-            isHovered ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
-          }`}
-        >
+        <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0">
           <Button
             size="icon"
             variant="secondary"
-            className="bg-white/90 hover:bg-white text-black rounded-full shadow-lg"
+            onClick={() => setIsWishlisted(!isWishlisted)}
+            className={`rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ${
+              isWishlisted
+                ? "bg-red-500 hover:bg-red-600 text-white"
+                : "bg-white/90 hover:bg-white text-gray-800"
+            }`}
           >
-            <Heart className="h-4 w-4" />
+            <Heart className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
           </Button>
-          <Link href={`/products/${product.slug}`}>
-            <Button
-              size="icon"
-              variant="secondary"
-              className="bg-white/90 hover:bg-white text-black rounded-full shadow-lg"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-          </Link>
+          <Button
+            size="icon"
+            variant="secondary"
+            className="bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg backdrop-blur-sm hover:scale-110 transition-all duration-300"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Rating */}
+        <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1 shadow-lg">
+          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+          <span className="text-gray-800 text-xs font-medium">4.9</span>
         </div>
 
         {/* Quick Add to Cart */}
-        <div
-          className={`absolute bottom-4 left-4 right-4 transition-all duration-300 ${
-            isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          }`}
-        >
-          <Button className="w-full bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl">
+        <div className="absolute bottom-4 left-4 right-16 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0">
+          <Button className="w-full bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
             <ShoppingBag className="h-4 w-4 mr-2" />
             Quick Add
           </Button>
@@ -120,48 +111,51 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
       {/* Content */}
       <div className="p-6">
-        <div className="text-xs text-amber-500 uppercase tracking-wide mb-2 font-semibold">
+        <div className="text-xs text-amber-600 uppercase tracking-wide mb-2 font-semibold">
           {product.category.replace("-", " ")}
         </div>
 
-        <h3 className="text-white font-bold text-lg mb-3 line-clamp-2 group-hover:text-amber-400 transition-colors">
+        <h3 className="text-gray-900 font-bold text-lg mb-3 line-clamp-2 group-hover:text-amber-700 transition-colors">
           {product.title}
         </h3>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <span className="text-2xl font-bold text-amber-500">₹{product.price}</span>
+            <span className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
+              ₹{product.price}
+            </span>
             {product.compare_price && (
-              <span className="text-lg text-zinc-500 line-through">₹{product.compare_price}</span>
+              <span className="text-lg text-gray-500 line-through">₹{product.compare_price}</span>
             )}
           </div>
-
-          <Link href={`/products/${product.slug}`}>
-            <Button
-              size="sm"
-              className="bg-zinc-800 hover:bg-amber-500 hover:text-black text-white border border-zinc-600 hover:border-amber-500 transition-all duration-300"
-            >
-              VIEW
-            </Button>
-          </Link>
         </div>
 
+        {/* View Details Button */}
+        <Link href={`/products/${product.slug}`} className="block">
+          <Button
+            variant="outline"
+            className="w-full border-2 border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-300 rounded-xl font-semibold"
+          >
+            View Details
+          </Button>
+        </Link>
+
         {/* Premium Features */}
-        <div className="mt-4 flex items-center gap-4 text-xs text-zinc-400">
-          <span className="flex items-center gap-1">
+        <div className="flex items-center gap-4 text-xs mt-4">
+          <span className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200">
             <div className="w-2 h-2 bg-green-500 rounded-full" />
-            Waterproof
-          </span>
-          <span className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-blue-500 rounded-full" />
-            Triple Layer
-          </span>
-          <span className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-purple-500 rounded-full" />
             Premium
+          </span>
+          <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-full border border-blue-200">
+            <div className="w-2 h-2 bg-blue-500 rounded-full" />
+            Quality
+          </span>
+          <span className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-full border border-amber-200">
+            <div className="w-2 h-2 bg-amber-500 rounded-full" />
+            Exclusive
           </span>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

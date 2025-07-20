@@ -14,24 +14,24 @@ export default function Collections() {
       featured: true,
     },
     {
+      name: "CUBAN COLLAR SHIRTS",
+      description: "Bold patterned shirts perfect for parties and street fashion",
+      image: "/products/shirt-1.webp",
+      href: "/collections/shirts",
+      featured: true,
+    },
+    {
+      name: "SWEATSHIRTS & HOODIES",
+      description: "400 GSM cotton fleece with stone-washed comfort",
+      image: "/products/hoodie-1.webp",
+      href: "/collections/sweatshirts-hoodies",
+      featured: true,
+    },
+    {
       name: "OVERSIZED TEES",
       description: "Cotton, breathable, stone-washed perfection",
       image: "/placeholder.svg?height=600&width=400",
       href: "/collections/t-shirts",
-      featured: false,
-    },
-    {
-      name: "HOODIES & SWEATSHIRTS",
-      description: "400 GSM heavy cotton fleece",
-      image: "/placeholder.svg?height=600&width=400",
-      href: "/collections/hoodies",
-      featured: false,
-    },
-    {
-      name: "CUBAN COLLAR SHIRTS",
-      description: "Gender-neutral partywear essentials",
-      image: "/placeholder.svg?height=600&width=400",
-      href: "/collections/shirts",
       featured: false,
     },
   ]
